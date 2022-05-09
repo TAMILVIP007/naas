@@ -41,8 +41,7 @@ class JobsController(HTTPMethodView):
         # path = os.path.join(dirname, filename)
         seps = os.sep + os.altsep if os.altsep else os.sep
         strip_path = os.path.splitdrive(path)[1].lstrip(seps)
-        new_path = os.path.join(n_env.path_naas_folder, strip_path)
-        return new_path
+        return os.path.join(n_env.path_naas_folder, strip_path)
 
     def __save_file(self, path, data=None):
         if not data:
@@ -53,10 +52,9 @@ class JobsController(HTTPMethodView):
             except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
-        f = open(path, "wb")
-        decoded = base64.b64decode(data)
-        f.write(decoded)
-        f.close()
+        with open(path, "wb") as f:
+            decoded = base64.b64decode(data)
+            f.write(decoded)
 
     def __save_history(self, path, data=None):
         dt_string = datetime.datetime.now(tz=pytz.timezone(n_env.tz)).strftime(
@@ -109,7 +107,7 @@ class JobsController(HTTPMethodView):
         elif not cur_mode and not cur_light and not histo:
             job["file"] = self.__open_file(path, t_production)
         elif cur_mode or histo:
-            new_path = "" + path
+            new_path = f"{path}"
             dirname = os.path.dirname(new_path)
             filename = os.path.basename(new_path)
             if cur_mode and histo:

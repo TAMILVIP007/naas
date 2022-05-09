@@ -85,7 +85,7 @@ class Scheduler:
             return
         if recurrence:
             print("recurrence is deprecated use cron arg instead")
-        cron = recurrence if recurrence else cron
+        cron = recurrence or cron
         if not cron:
             print("No cron provided\n")
             return

@@ -121,8 +121,7 @@ class Notebooks:
     def get_out_path(self, path):
         filename = os.path.basename(path)
         dirname = os.path.dirname(path)
-        out_path = os.path.join(dirname, f"{t_output}__{filename}")
-        return out_path
+        return os.path.join(dirname, f"{t_output}__{filename}")
 
     def __nb_render(self, filepath):
         result_type = None
@@ -286,8 +285,7 @@ class Notebooks:
     def __get_output_path(self, file_filepath):
         file_dirpath = os.path.dirname(file_filepath)
         file_filename = os.path.basename(file_filepath)
-        file_filepath_out = os.path.join(file_dirpath, f"{t_output}__{file_filename}")
-        return file_filepath_out
+        return os.path.join(file_dirpath, f"{t_output}__{file_filename}")
 
     async def exec(self, uid, job):
         value = job.get("value", None)
@@ -353,20 +351,6 @@ class Notebooks:
                     "filepath": file_filepath,
                     "output_filepath": file_filepath_out,
                     "error": err,
-                    "traceback": str(tb),
-                }
-            )
-        except:  # noqa: E722
-            tb = traceback.format_exc()
-            res = {"error": "Unknow error", "traceback": str(tb)}
-            self.__logger.error(
-                {
-                    "id": uid,
-                    "type": "Exception",
-                    "status": t_error,
-                    "filepath": file_filepath,
-                    "output_filepath": file_filepath_out,
-                    "error": res.get("error"),
                     "traceback": str(tb),
                 }
             )

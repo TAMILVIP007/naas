@@ -28,14 +28,13 @@ def escape_docker(s):
 
 
 def encode_proxy_url(token=""):
-    if n_env.user and n_env.user != "":
-        client_encoded = escape_kubernet(n_env.user)
-        message_bytes = client_encoded.encode("ascii")
-        base64_bytes = b64encode(message_bytes)
-        username_base64 = base64_bytes.decode("ascii")
-        return f"{n_env.proxy_api}/{username_base64}/{token}"
-    else:
+    if not n_env.user or n_env.user == "":
         return f"{n_env.proxy_api}/{token}"
+    client_encoded = escape_kubernet(n_env.user)
+    message_bytes = client_encoded.encode("ascii")
+    base64_bytes = b64encode(message_bytes)
+    username_base64 = base64_bytes.decode("ascii")
+    return f"{n_env.proxy_api}/{username_base64}/{token}"
 
 
 class Domain:
@@ -48,8 +47,7 @@ class Domain:
     def status(self):
         req = requests.get(url=f"{n_env.proxy_api}/status")
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()
 
     def add(self, domain, url=None):
         token = None
@@ -58,10 +56,7 @@ class Domain:
             list_url = url.split("/")
             token = list_url.pop()
             endpoint = list_url.pop()
-        if "://" in domain:
-            clean_domain = domain.split("://")[1]
-        else:
-            clean_domain = domain
+        clean_domain = domain.split("://")[1] if "://" in domain else domain
         data = {"domain": clean_domain, "endpoint": endpoint, "token": token}
         req = requests.post(
             url=f"{n_env.proxy_api}/proxy", headers=self.headers, json=data
@@ -79,8 +74,7 @@ class Domain:
             json={"domain": domain},
         )
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()
 
     def delete(self, domain):
         req = requests.delete(
@@ -89,5 +83,4 @@ class Domain:
             json={"domain": domain},
         )
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()

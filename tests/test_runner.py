@@ -36,8 +36,7 @@ def getUserb64():
     client_encoded = escape_kubernet(n_env.user)
     message_bytes = client_encoded.encode("ascii")
     base64_bytes = b64encode(message_bytes)
-    username_base64 = base64_bytes.decode("ascii")
-    return username_base64
+    return base64_bytes.decode("ascii")
 
 
 def get_latest_version():
@@ -45,10 +44,12 @@ def get_latest_version():
         r = requests.get("https://pypi.python.org/pypi/naas/json")
         r.raise_for_status()
         response = r.json()
-        version = (
-            response["urls"][0]["filename"].replace("naas-", "").replace(".tar.gz", "")
+        return (
+            response["urls"][0]["filename"]
+            .replace("naas-", "")
+            .replace(".tar.gz", "")
         )
-        return version
+
     except:  # noqa: E722
         return ""
 

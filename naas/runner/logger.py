@@ -85,12 +85,12 @@ class Logger:
             if not technical_rows and "type" in df and "filepath" in df:
                 df = df[df["type"] != df["filepath"]]
                 df = df[df["status"] != "busy"]
-            if len(filters) > 0:
+            if filters:
                 df = df[df.type.isin(filters)]
-            if len(sort) > 0:
+            if sort:
                 for query in sort:
                     field = [query["field"]]
-                    ascending = False if query["type"] == "desc" else True
+                    ascending = query["type"] != "desc"
                     df = df.sort_values(by=field, ascending=ascending)
             total_records = len(df.index)
             if skip > 0:

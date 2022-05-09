@@ -68,9 +68,9 @@ class n_env:
     def api(self):
         return self._api or os.environ.get(
             "NAAS_API",
-            f"http://localhost:{self.api_port}"
-            if not self.remote_mode
-            else self.remote_api,
+            self.remote_api
+            if self.remote_mode
+            else f"http://localhost:{self.api_port}",
         )
 
     @api.setter
@@ -125,10 +125,7 @@ class n_env:
         res = (
             self._hub_base or os.environ.get("JUPYTERHUB_URL") or "https://app.naas.ai"
         )
-        if "://" not in res:
-            return f"http://{res}"
-        else:
-            return res
+        return f"http://{res}" if "://" not in res else res
 
     @hub_base.setter
     def hub_base(self, hub_base):
@@ -136,19 +133,19 @@ class n_env:
 
     @property
     def any_user_url(self):
-        if self.user and self.user != "":
-            base_url = f"{self.hub_base}/user-redirect"
-        else:
-            base_url = self.hub_base
-        return base_url
+        return (
+            f"{self.hub_base}/user-redirect"
+            if self.user and self.user != ""
+            else self.hub_base
+        )
 
     @property
     def user_url(self):
-        if self.user and self.user != "":
-            base_url = f"{self.hub_base}/user/{self.user}"
-        else:
-            base_url = self.hub_base
-        return base_url
+        return (
+            f"{self.hub_base}/user/{self.user}"
+            if self.user and self.user != ""
+            else self.hub_base
+        )
 
     @property
     def naas_folder(self):

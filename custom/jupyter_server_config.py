@@ -44,7 +44,7 @@ if "NB_UMASK" in os.environ:
 
 def naasRunner(naas_port):
     while True:
-        logging.info("Starting naas runner on port {}.".format(naas_port))
+        logging.info(f"Starting naas runner on port {naas_port}.")
         p = subprocess.Popen(["python", "-m", "naas.runner", "-p", f"{naas_port}"])
         p.wait()
         logging.info("Naas Runner exited !")

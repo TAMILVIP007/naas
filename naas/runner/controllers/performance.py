@@ -36,7 +36,7 @@ class ByteSize(int):
         return self.__format__(".2f")
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, super().__repr__())
+        return f"{self.__class__.__name__}({super().__repr__()})"
 
     def __format__(self, format_spec):
         suffix, val = self.readable
@@ -73,11 +73,8 @@ class PerformanceController(HTTPMethodView):
         }
         if modes.get(mode) is not None:
             return json({mode: modes[mode](self)})
-        else:
-            perf = {}
-            for key, value in modes.items():
-                perf[key] = value(self)
-            return json(perf)
+        perf = {key: value(self) for key, value in modes.items()}
+        return json(perf)
 
     # TODO make the functions to get the cpu and ram value
     def getCpu(self):

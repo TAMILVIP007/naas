@@ -10,10 +10,12 @@ def get_latest_version():
         r = requests.get("https://pypi.python.org/pypi/naas/json")
         r.raise_for_status()
         response = r.json()
-        version = (
-            response["urls"][0]["filename"].replace("naas-", "").replace(".tar.gz", "")
+        return (
+            response["urls"][0]["filename"]
+            .replace("naas-", "")
+            .replace(".tar.gz", "")
         )
-        return version
+
     except:  # noqa: E722
         return ""
 

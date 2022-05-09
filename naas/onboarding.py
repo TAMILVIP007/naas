@@ -33,7 +33,6 @@ def download_file(url, file_name=None):
     elif file_name not in ".":
         file_name = f"{file_name}.ipynb"
 
-    file_name = f"{file_name}"
     if "://github.com" in raw_target:
         raw_target = raw_target.replace(
             "https://github.com/", "https://raw.githubusercontent.com/"
@@ -45,9 +44,8 @@ def download_file(url, file_name=None):
             cur_path = os.path.join(
                 f"{n_env.path_naas_folder}{n_env.server_root}", raw_target
             )
-            ff = open(cur_path, "rb")
-            content = ff.read()
-            ff.close()
+            with open(cur_path, "rb") as ff:
+                content = ff.read()
         except Exception as e:
             print(f"Cannot open local file {cur_path}", e)
             content = (
@@ -59,8 +57,7 @@ def download_file(url, file_name=None):
     else:
         r = requests.get(raw_target)
         content = r.content
-    if content.startswith(b"ERROR"):
-        file_name = "dl_error.txt"
+    file_name = "dl_error.txt" if content.startswith(b"ERROR") else f"{file_name}"
     file_name = __generate_unique_path(file_name)
     with open(file_name, "wb") as f:
         f.write(content)

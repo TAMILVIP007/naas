@@ -56,25 +56,24 @@ class Scheduler:
     async def start(self, test_mode=False):
         if test_mode:
             await self.__scheduler_function()
-        else:
-            if self.__scheduler.state != apscheduler.schedulers.base.STATE_RUNNING:
-                self.__scheduler.add_job(
-                    func=self.__scheduler_function,
-                    trigger="interval",
-                    id=n_env.scheduler_job_name,
-                    seconds=n_env.scheduler_interval,
-                    max_instances=n_env.scheduler_job_max,
-                )
-                self.__scheduler.start()
-                uid = str(uuid.uuid4())
-                self.__logger.info(
-                    {
-                        "id": uid,
-                        "type": t_main,
-                        "filepath": "sheduler",
-                        "status": f"start SCHEDULER seconds={n_env.scheduler_interval}, max_instances={n_env.scheduler_job_max}",
-                    }
-                )
+        elif self.__scheduler.state != apscheduler.schedulers.base.STATE_RUNNING:
+            self.__scheduler.add_job(
+                func=self.__scheduler_function,
+                trigger="interval",
+                id=n_env.scheduler_job_name,
+                seconds=n_env.scheduler_interval,
+                max_instances=n_env.scheduler_job_max,
+            )
+            self.__scheduler.start()
+            uid = str(uuid.uuid4())
+            self.__logger.info(
+                {
+                    "id": uid,
+                    "type": t_main,
+                    "filepath": "sheduler",
+                    "status": f"start SCHEDULER seconds={n_env.scheduler_interval}, max_instances={n_env.scheduler_job_max}",
+                }
+            )
 
     async def __check_run(self, uid, file_filepath, current_type, last_update_str):
         running = await self.__jobs.is_running(uid, file_filepath, current_type)
@@ -85,7 +84,7 @@ class Scheduler:
                 )
                 # Timeout run 1h
                 timeout_date = datetime.datetime.today() - datetime.timedelta(hours=1)
-                running = True if last_update > timeout_date else False
+                running = last_update > timeout_date
             except ValueError:
                 pass
         return running
@@ -156,7 +155,7 @@ class Scheduler:
                             "error": "url not in right format",
                         }
                     )
-                elif next_url is not None and "https://" in next_url:
+                elif next_url is not None:
                     self.__logger.info(
                         {
                             "id": uid,
@@ -340,8 +339,6 @@ class Scheduler:
                     "duration": duration_total,
                 }
             )
-            # We disable this for now as it is not used and is therefore filling up the database.
-            # await self.analytics(main_uid)
         except Exception as e:
             tb = traceback.format_exc()
             duration_total = time.time() - all_start_time
@@ -353,20 +350,6 @@ class Scheduler:
                     "filepath": "scheduler",
                     "duration": duration_total,
                     "error": str(e),
-                    "traceback": tb,
-                }
-            )
-        except:  # noqa: E722
-            tb = traceback.format_exc()
-            duration_total = time.time() - all_start_time
-            self.__logger.error(
-                {
-                    "id": main_uid,
-                    "type": t_scheduler,
-                    "status": t_error,
-                    "filepath": "scheduler",
-                    "duration": duration_total,
-                    "error": "Unknow error",
                     "traceback": tb,
                 }
             )

@@ -31,8 +31,7 @@ class Dependency:
                 else:
                     json_filtered.append({"path": item["path"]})
         if raw is False:
-            df = pd.DataFrame(json_filtered)
-            return df
+            return pd.DataFrame(json_filtered)
         return json_filtered
 
     def add(self, path=None, debug=False):
