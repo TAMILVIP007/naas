@@ -24,7 +24,7 @@ wrong_jobs_list = [
         "status": "installed",
         "totalRun": 0,
         "type": "asset",
-        "value": "f47887a7d8da171e617f800e5d71c022f4923a42758f814399d45aab7427"
+        "value": "f47887a7d8da171e617f800e5d71c022f4923a42758f814399d45aab7427",
     },
     {
         "id": "7450272a-0933-4be0-8c67-97de83fbe92a",
@@ -37,7 +37,7 @@ wrong_jobs_list = [
         "totalRun": 0,
         "runs": None,
         "type": "asset",
-        "value": "f47887a7d8da171e617f800e5d71c022f4923a42758f814399d45aab7429"
+        "value": "f47887a7d8da171e617f800e5d71c022f4923a42758f814399d45aab7429",
     },
 ]
 

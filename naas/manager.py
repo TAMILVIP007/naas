@@ -184,9 +184,7 @@ class Manager:
                 {
                     "kernel_id": notebook["kernel"]["id"],
                     "path": notebook["notebook"]["path"],
-                    "process_ids": self.__get_process_ids(
-                        notebook["kernel"]["id"]
-                    ),
+                    "process_ids": self.__get_process_ids(notebook["kernel"]["id"]),
                 }
                 for notebook in sessions
             ]
@@ -376,7 +374,7 @@ class Manager:
         dev_path = obj.get("path")
         new_obj["path"] = self.get_path(dev_path)
         new_obj["file"] = self.__open_file(dev_path)
-            # new_obj["status"] = t_add
+        # new_obj["status"] = t_add
         try:
             if debug:
                 print(f'{new_obj["status"]} ==> {new_obj}')

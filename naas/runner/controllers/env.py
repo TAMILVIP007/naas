@@ -11,9 +11,7 @@ def get_latest_version():
         r.raise_for_status()
         response = r.json()
         return (
-            response["urls"][0]["filename"]
-            .replace("naas-", "")
-            .replace(".tar.gz", "")
+            response["urls"][0]["filename"].replace("naas-", "").replace(".tar.gz", "")
         )
 
     except:  # noqa: E722
