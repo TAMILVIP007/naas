@@ -10,10 +10,7 @@ class Secret:
             r = requests.get(f"{n_env.api}/{t_secret}")
             r.raise_for_status()
             res = r.json()
-            if raw:
-                return res
-            else:
-                return pd.DataFrame.from_records(res)
+            return res if raw else pd.DataFrame.from_records(res)
         except requests.exceptions.ConnectionError as err:
             print(error_busy, err)
             raise
@@ -37,11 +34,7 @@ class Secret:
 
     def get(self, name=None, default_value=None):
         all_secret = self.list(True)
-        secret_item = None
-        for item in all_secret:
-            if name == item["name"]:
-                secret_item = item
-                break
+        secret_item = next((item for item in all_secret if name == item["name"]), None)
         if secret_item is not None:
             return secret_item.get("secret", None)
         return default_value

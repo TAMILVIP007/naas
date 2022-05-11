@@ -94,7 +94,7 @@ class Notifications:
         content = ""
         file_link = f"{n_env.user_url}/naas/downloader?url={file_path}"
         tmp_path = cpath(file_path)
-        if current_type == t_asset or current_type == t_notebook:
+        if current_type in [t_asset, t_notebook]:
             content = f'The file <a href="{file_link}">{tmp_path}</a> <br/>'
             content += f"Accesible at this url:<br/> {encode_proxy_url(current_type)}/{current_value}<br/>"
         elif current_type == t_scheduler:
@@ -163,8 +163,7 @@ class Notifications:
         self.deprecatedPrint()
         req = requests.get(url=f"{n_env.notif_api}/")
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()
 
     def list(self):
         self.deprecatedPrint()

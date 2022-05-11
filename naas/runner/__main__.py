@@ -10,10 +10,6 @@ def createProductionSymlink():
         os.symlink("/home/ftp/.naas/home/ftp", "/home/ftp/⚡ → Production")
     except FileExistsError as e:
         print(e)
-        pass
-    except:  # noqa: E722
-        print("An error occured while creating production symlink.")
-        pass
 
 
 if __name__ == "__main__":
@@ -27,8 +23,8 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--kill", action="store_true", help="kill me")
     args = parser.parse_args()
     port = int(args.port) if args.port else None
-    kill = True if args.kill else False
-    debug = False if args.prod else True
+    kill = bool(args.kill)
+    debug = not args.prod
     runner = Runner()
     if kill:
         runner.kill()

@@ -44,8 +44,7 @@ class DownloaderController(HTTPMethodView):
                     {"id": uid, "type": t_downloader, "status": t_send, "filepath": url}
                 )
                 return json({"status": t_error, "error": str(e), "tb": str(tb)})
-        if mode_api is None:
-            redirect_to = f"{n_env.user_url}/lab/tree/{file_name}"
-            return redirect(redirect_to)
-        else:
+        if mode_api is not None:
             return json({"status": t_send})
+        redirect_to = f"{n_env.user_url}/lab/tree/{file_name}"
+        return redirect(redirect_to)

@@ -154,9 +154,8 @@ class Jobs:
     def __get_save_from_file(self, uid):
         data = []
         try:
-            f = open(self.__json_secrets_path, "r")
-            data_l = json.load(f)
-            f.close()
+            with open(self.__json_secrets_path, "r") as f:
+                data_l = json.load(f)
             # data = data_l
             dt_string = datetime.datetime.now(tz=pytz.timezone(n_env.tz)).strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -169,7 +168,6 @@ class Jobs:
                         runs = json.loads(runs)
                     except Exception:
                         runs = []
-                        pass
                 c = {
                     "id": d.get("id", uid),
                     "type": d.get("type", ""),
@@ -260,14 +258,13 @@ class Jobs:
         return res
 
     def __match_clear(self, cur_filename, filename, clear_all):
-        if (
-            clear_all
-            and cur_filename.endswith(f"__{filename}")
-            or cur_filename == filename
-        ):
-            return True
-        else:
-            return False
+        return bool(
+            (
+                clear_all
+                and cur_filename.endswith(f"__{filename}")
+                or cur_filename == filename
+            )
+        )
 
     def clear_file(self, uid, path, histo, mode=None):
         # possible format
@@ -315,10 +312,7 @@ class Jobs:
         #     filename = f"output_{filetype}_{filename}"
         # else:
         #     filename = f"{filetype}_{filename}"
-        if output:
-            filename = f"___{t_output}__{filename}"
-        else:
-            filename = f"___{filename}"
+        filename = f"___{t_output}__{filename}" if output else f"___{filename}"
         for ffile in os.listdir(dirname):
             if ffile.endswith(filename):
                 split_list = ffile.split("___")
@@ -350,14 +344,10 @@ class Jobs:
                         try:
                             d["path"] = d["path"] if prodPath else cpath(d["path"])
                             runs = d.get("runs", "[]")
-                            if type(runs) is str:
-                                d["runs"] = json.loads(runs)
-                            else:
-                                d["runs"] = runs
+                            d["runs"] = json.loads(runs) if type(runs) is str else runs
                         except Exception as e:
                             print(e)
                             d["runs"] = []
-                            pass
         except Exception as e:
             print("list", e)
         return data
@@ -466,7 +456,6 @@ class Jobs:
                 runs = json.loads(self.__df.at[index, "runs"])
             except Exception:
                 runs = []
-                pass
             runs.append(
                 {"id": uid, "duration": run_time, "date": dt_string, "status": status}
             )

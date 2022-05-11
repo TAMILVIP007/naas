@@ -61,8 +61,7 @@ class Callback:
                 headers=self.headers,
             )
             req.raise_for_status()
-            jsn = req.json()
-            return jsn
+            return req.json()
         except Exception as err:
             print("😢 Cannot add callback.\n", err)
 
@@ -103,8 +102,7 @@ class Callback:
     def status(self):
         req = requests.get(url=f"{n_env.callback_api}/")
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()
 
     def list(self, user=None):
         data = {}

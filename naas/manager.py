@@ -86,7 +86,7 @@ class Manager:
             print(f"😢 Job cannot be moved to {new_path}", res.get(t_error))
 
     def is_production(self):
-        return True if n_env.current.get("env") == "RUNNER" else False
+        return n_env.current.get("env") == "RUNNER"
 
     def set_runner_mode(self):
         try:
@@ -103,8 +103,7 @@ class Manager:
     def get_logs(self):
         req = requests.get(url=f"{n_env.api}/logs", headers=self.headers)
         req.raise_for_status()
-        jsn = req.json()
-        return jsn
+        return req.json()
 
     def get_naas(self):
         naas_data = []
@@ -181,7 +180,7 @@ class Manager:
             req.raise_for_status()
             sessions = req.json()
             sessions = filter(lambda item: "notebook" in item["type"], sessions)
-            notebooks = [
+            return [
                 {
                     "kernel_id": notebook["kernel"]["id"],
                     "path": notebook["notebook"]["path"],
@@ -189,7 +188,7 @@ class Manager:
                 }
                 for notebook in sessions
             ]
-            return notebooks
+
         except requests.exceptions.ConnectionError as e:
             print(e)
         except requests.exceptions.HTTPError as e:
@@ -200,13 +199,12 @@ class Manager:
         return []
 
     def get_path(self, path):
-        if path is not None:
-            base_path = os.getcwd()
-            if self.is_production():
-                base_path = base_path.replace(n_env.path_naas_folder, "")
-            return os.path.abspath(os.path.join(base_path, path))
-        else:
+        if path is None:
             return self.notebook_path()
+        base_path = os.getcwd()
+        if self.is_production():
+            base_path = base_path.replace(n_env.path_naas_folder, "")
+        return os.path.abspath(os.path.join(base_path, path))
 
     def proxy_url(self, endpoint, token=None):
         public_url = encode_proxy_url(endpoint)
@@ -234,10 +232,9 @@ class Manager:
             return
         if os.path.exists(new_path):
             raise FileNotFoundError(f"file already exist {new_path}")
-        f = open(new_path, "wb")
-        decoded = base64.b64decode(filedata["data"])
-        f.write(decoded)
-        f.close()
+        with open(new_path, "wb") as f:
+            decoded = base64.b64decode(filedata["data"])
+            f.write(decoded)
         return new_path
 
     def clear_file(self, path=None, mode=None, histo=None):
@@ -258,7 +255,7 @@ class Manager:
             )
             r.raise_for_status()
             res = r.json()
-            if res.get("status") == t_error or res.get("status") == t_skip:
+            if res.get("status") in [t_error, t_skip]:
                 raise ValueError(f"❌ Cannot clean your file {path}")
             for ff in res.get("data"):
                 print(f"🕣 Your file {ff} has been remove from production.\n")
@@ -298,15 +295,15 @@ class Manager:
                 r.raise_for_status()
             res = r.json()
             if (
-                res.get("status") == t_error or res.get("status") == t_skip
-            ) and res.get("error") != t_job_not_found:
+                res.get("status") in [t_error, t_skip]
+                and res.get("error") != t_job_not_found
+            ):
                 raise ValueError(f"❌ Cannot list your file {path}")
             if res.get("files", None) and len(res.get("files", [])) > 0:
                 return pd.DataFrame(data=res.get("files", []))
-            else:
-                if display:
-                    print("No files found in prod")
-                return []
+            if display:
+                print("No files found in prod")
+            return []
         except requests.exceptions.ConnectionError as err:
             print(error_busy, err)
             raise
@@ -333,7 +330,7 @@ class Manager:
             )
             r.raise_for_status()
             res = r.json()
-            if res.get("status") == t_error or res.get("status") == t_skip:
+            if res.get("status") in [t_error, t_skip]:
                 raise ValueError(f"❌ Cannot get your file {path}")
             new_path = self.__save_file(
                 self.safe_filepath(current_file), res.get("file")
@@ -352,75 +349,77 @@ class Manager:
     def path(self, filetype):
         def mode_path(self, path):
             nonlocal filetype
-            if self.is_production():
-                # filename = os.path.basename(path)
-                # dirname = os.path.dirname(path)
-                # filename = f"{filetype}_{filename}"
-                # type_path = os.path.join(dirname, filename)
-                type_path = path
-                return self.get_path(type_path)
-            else:
+            if not self.is_production():
                 return path
+            # filename = os.path.basename(path)
+            # dirname = os.path.dirname(path)
+            # filename = f"{filetype}_{filename}"
+            # type_path = os.path.join(dirname, filename)
+            type_path = path
+            return self.get_path(type_path)
 
         return mode_path
 
     def add_prod(self, obj, debug):
-        if "type" in obj and "path" in obj and "params" in obj and "value" in obj:
-            new_obj = copy.copy(obj)
-            dev_path = obj.get("path")
-            new_obj["path"] = self.get_path(dev_path)
-            new_obj["file"] = self.__open_file(dev_path)
-            # new_obj["status"] = t_add
-            try:
-                if debug:
-                    print(f'{new_obj["status"]} ==> {new_obj}')
-                r = requests.post(
-                    f"{n_env.api}/{t_job}", json=new_obj, headers=self.headers
-                )
-                r.raise_for_status()
-                res = r.json()
-                if res.get("status") == t_error or res.get("status") == t_skip:
-                    raise ValueError(f"❌ Cannot add your file {obj.get('path')}")
-                if debug:
-                    print(f'{res["status"]} ==> {res}')
-            except requests.exceptions.ConnectionError as err:
-                print(error_busy, err)
-                raise
-            except requests.exceptions.HTTPError as err:
-                print(error_reject, err)
-                raise
-            return new_obj
-        else:
+        if (
+            "type" not in obj
+            or "path" not in obj
+            or "params" not in obj
+            or "value" not in obj
+        ):
             raise ValueError(
                 'obj should have all keys ("type","path","params","value")'
             )
+        new_obj = copy.copy(obj)
+        dev_path = obj.get("path")
+        new_obj["path"] = self.get_path(dev_path)
+        new_obj["file"] = self.__open_file(dev_path)
+        # new_obj["status"] = t_add
+        try:
+            if debug:
+                print(f'{new_obj["status"]} ==> {new_obj}')
+            r = requests.post(
+                f"{n_env.api}/{t_job}", json=new_obj, headers=self.headers
+            )
+            r.raise_for_status()
+            res = r.json()
+            if res.get("status") in [t_error, t_skip]:
+                raise ValueError(f"❌ Cannot add your file {obj.get('path')}")
+            if debug:
+                print(f'{res["status"]} ==> {res}')
+        except requests.exceptions.ConnectionError as err:
+            print(error_busy, err)
+            raise
+        except requests.exceptions.HTTPError as err:
+            print(error_reject, err)
+            raise
+        return new_obj
 
     def del_prod(self, obj, debug):
-        if "type" in obj and "path" in obj:
-            new_obj = copy.copy(obj)
-            new_obj["path"] = self.get_path(obj.get("path"))
-            new_obj["params"] = {}
-            new_obj["file"] = None
-            new_obj["value"] = None
-            new_obj["status"] = t_delete
-            try:
-                if debug:
-                    print(f'{new_obj["status"]} ==> {new_obj}')
-                r = requests.post(
-                    f"{n_env.api}/{t_job}", json=new_obj, headers=self.headers
-                )
-                r.raise_for_status()
-                res = r.json()
-                if res.get("status") == t_error or res.get("status") == t_skip:
-                    raise ValueError(f"❌ Cannot delete your file {obj.get('path')}")
-                if debug:
-                    print(f'{res.get("status")} ==> {res}')
-            except requests.exceptions.ConnectionError as err:
-                print(error_busy, err)
-                raise
-            except requests.exceptions.HTTPError as err:
-                print(error_reject, err)
-                raise
-            return new_obj
-        else:
+        if "type" not in obj or "path" not in obj:
             raise ValueError('obj should have keys ("type","path")')
+        new_obj = copy.copy(obj)
+        new_obj["path"] = self.get_path(obj.get("path"))
+        new_obj["params"] = {}
+        new_obj["file"] = None
+        new_obj["value"] = None
+        new_obj["status"] = t_delete
+        try:
+            if debug:
+                print(f'{new_obj["status"]} ==> {new_obj}')
+            r = requests.post(
+                f"{n_env.api}/{t_job}", json=new_obj, headers=self.headers
+            )
+            r.raise_for_status()
+            res = r.json()
+            if res.get("status") in [t_error, t_skip]:
+                raise ValueError(f"❌ Cannot delete your file {obj.get('path')}")
+            if debug:
+                print(f'{res.get("status")} ==> {res}')
+        except requests.exceptions.ConnectionError as err:
+            print(error_busy, err)
+            raise
+        except requests.exceptions.HTTPError as err:
+            print(error_reject, err)
+            raise
+        return new_obj

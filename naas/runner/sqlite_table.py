@@ -37,7 +37,6 @@ class SqliteTable:
             print(e)
 
     def execute_command(self, command, commit=True, **kwargs):
-        ret = None
         if self.__db:
             try:
                 cursor = self.__db.cursor()
@@ -47,7 +46,7 @@ class SqliteTable:
             except Exception as e:
                 print(e)
                 return e
-        return ret
+        return None
 
     def clear(self):
         self.execute_command(f"DELETE FROM {self.__focused_table}")
@@ -100,9 +99,7 @@ class SqliteTable:
         try:
             df = self.__get_csv_values(csv_file)
             for index, row in df.iterrows():
-                data = {}
-                for col in self.__columns:
-                    data[col] = row[col]
+                data = {col: row[col] for col in self.__columns}
                 self.add_on_table(commit=False, **data)
             self.__db.cursor().execute("Commit")
         except Exception as e:

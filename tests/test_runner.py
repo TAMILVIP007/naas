@@ -36,8 +36,7 @@ def getUserb64():
     client_encoded = escape_kubernet(n_env.user)
     message_bytes = client_encoded.encode("ascii")
     base64_bytes = b64encode(message_bytes)
-    username_base64 = base64_bytes.decode("ascii")
-    return username_base64
+    return base64_bytes.decode("ascii")
 
 
 def get_latest_version():
@@ -45,12 +44,13 @@ def get_latest_version():
         r = requests.get("https://pypi.python.org/pypi/naas/json")
         r.raise_for_status()
         response = r.json()
-        version = (
+        return (
             response["urls"][0]["filename"].replace("naas-", "").replace(".tar.gz", "")
         )
-        return version
+
     except:  # noqa: E722
         return ""
+
 
 def get_env():
     return {
@@ -169,6 +169,8 @@ async def test_init(test_runner):
 async def test_performance(test_runner):
     response = await test_runner.get("/performance")
     assert response.status_code == 200
+
+
 #   assert re.match("[0-9]+[\.][0-9]{2}[ ]*[kMGP]?[B]", response.data.storage)
 
 
@@ -340,7 +342,9 @@ async def test_notebooks(mocker, requests_mock, test_runner, tmp_path):
     assert len(res_job.get("runs")) == 0
     list_in_prod = webhook.list(new_path)
     assert len(list_in_prod) == 1
-    response = await test_runner.post(f"/{t_notebook}/{token}?b=yoyo", json={"test": "aa"})
+    response = await test_runner.post(
+        f"/{t_notebook}/{token}?b=yoyo", json={"test": "aa"}
+    )
     assert response.status_code == 200
     resp_json = response.json()
     assert response.headers.get("Content-Disposition") is not None
@@ -353,29 +357,27 @@ async def test_notebooks(mocker, requests_mock, test_runner, tmp_path):
     filename = os.path.basename(new_path)
     out_filename = f"{histo.get('timestamp')}___{t_output}__{filename}"
     dirname = os.path.dirname(new_path)
-    new_path_out_histo = os.path.join(
-        dirname, out_filename
-    )
+    new_path_out_histo = os.path.join(dirname, out_filename)
     assert os.path.isfile(new_path_out_histo)
     nb = nbformat.read(new_path_out_histo, as_version=4)
     assert len(nb.cells) == 3
     naas_cell = nb.cells[0]
-    assert naas_cell.metadata.tags == ['naas-injected']
-    naas_cell_source = ''.join(naas_cell.source)
-    uid = list_in_prod[0].get('id')
-    assert naas_cell_source.startswith('import naas')
-    assert 'naas.n_env.current' in naas_cell_source
+    assert naas_cell.metadata.tags == ["naas-injected"]
+    naas_cell_source = "".join(naas_cell.source)
+    uid = list_in_prod[0].get("id")
+    assert naas_cell_source.startswith("import naas")
+    assert "naas.n_env.current" in naas_cell_source
     assert '"path"' in naas_cell_source
     assert f'"uid": "{uid}"' in naas_cell_source
     assert '"env": "RUNNER"' in naas_cell_source
     assert '"runtime"' in naas_cell_source
     papermill_cell = nb.cells[1]
-    assert papermill_cell.metadata.tags == ['injected-parameters']
-    papermill_cell_source = ''.join(papermill_cell.source)
-    assert papermill_cell_source.startswith('# Parameters')
+    assert papermill_cell.metadata.tags == ["injected-parameters"]
+    papermill_cell_source = "".join(papermill_cell.source)
+    assert papermill_cell_source.startswith("# Parameters")
     assert 'params = {"b": "yoyo"}' in papermill_cell_source
     assert 'body = {"test": "aa"}' in papermill_cell_source
-    assert 'headers = {' in papermill_cell_source
+    assert "headers = {" in papermill_cell_source
     assert '"user-agent": "python-httpx/0.15.4",' in papermill_cell_source
     response = await test_runner.get(f"/{t_job}")
     assert response.status_code == 200

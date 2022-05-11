@@ -141,14 +141,12 @@ class Secret:
 
     def __decode(self, secret_base64):
         secret = base64.b64decode(secret_base64)
-        secret_decoded = secret.decode("ascii")
-        return secret_decoded
+        return secret.decode("ascii")
 
     def __encode(self, text):
         message_bytes = text.encode("ascii")
         base64_bytes = base64.b64encode(message_bytes)
-        secret_base64 = base64_bytes.decode("ascii")
-        return secret_base64
+        return base64_bytes.decode("ascii")
 
     async def list(self, uid):
         data = []
